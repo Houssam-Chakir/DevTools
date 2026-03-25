@@ -8,6 +8,7 @@ import { ProjectPill } from '../shared/ProjectPill';
 export interface SpaceCardData extends Record<string, unknown> {
   content: string;
   projectId?: string;
+  noteId?: string;
 }
 
 export function SpaceCardNode({ id, data, selected }: NodeProps) {
@@ -71,14 +72,24 @@ export function SpaceCardNode({ id, data, selected }: NodeProps) {
         className="!w-2.5 !h-2.5 !border-gh-accent-fg !bg-gh-canvas-default dark:!bg-gh-dark-canvas-subtle"
       />
 
-      {/* Header */}
-      <div className="nodrag flex items-center justify-between px-2 py-1 border-b border-gh-border-default dark:border-gh-dark-border-default bg-gh-canvas-subtle dark:bg-gh-dark-canvas-inset shrink-0">
-        {project && <ProjectPill project={project} />}
-        <div className="flex gap-1 ml-auto opacity-0 group-hover:opacity-100">
+      {/* Header — drag handle (no nodrag so the card can be dragged from here) */}
+      <div
+        className="flex items-center justify-between px-2 py-1 border-b border-gh-border-default dark:border-gh-dark-border-default bg-gh-canvas-subtle dark:bg-gh-dark-canvas-inset shrink-0 cursor-grab active:cursor-grabbing select-none"
+        aria-label="Drag to move card"
+      >
+        <div className="nodrag flex items-center gap-1 min-w-0">
+          {(data as SpaceCardData).noteId && (
+            <svg className="w-3 h-3 shrink-0 text-gh-accent-fg dark:text-gh-dark-accent-fg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          )}
+          {project && <ProjectPill project={project} />}
+        </div>
+        <div className="nodrag flex gap-1 ml-auto opacity-0 group-hover:opacity-100">
           <button
             onClick={handleDelete}
             className="w-5 h-5 flex items-center justify-center rounded text-gh-danger-fg dark:text-gh-dark-danger-fg hover:bg-gh-danger-subtle dark:hover:bg-gh-dark-danger-subtle"
-            title="Delete"
+            title="Delete card"
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
