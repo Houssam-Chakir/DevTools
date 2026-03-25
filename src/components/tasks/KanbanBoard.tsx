@@ -35,7 +35,7 @@ export function KanbanBoard({ search, filterProjectId, filterTagId }: KanbanBoar
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="h-full overflow-x-auto p-4 bg-gh-canvas-subtle dark:bg-gh-dark-canvas-default">
-        <div className="flex gap-3 h-full">
+        <div className="flex gap-4 h-full">
           {COLUMNS.map(({ status, label }) => (
             <KanbanColumn
               key={status}

@@ -15,7 +15,7 @@ export function NoteCard({ note, isActive, onClick }: NoteCardProps) {
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
+      className={`w-full text-left px-3 py-2.5 rounded-md transition-colors ${
         isActive
           ? 'bg-gh-accent-subtle dark:bg-gh-dark-accent-subtle border border-gh-accent-fg/30 dark:border-gh-dark-accent-fg/30'
           : 'hover:bg-gh-canvas-subtle dark:hover:bg-gh-dark-canvas-default border border-transparent'

@@ -16,7 +16,7 @@ export function TasksTab() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center gap-2 px-4 py-2 bg-gh-canvas-default dark:bg-gh-dark-canvas-subtle border-b border-gh-border-default dark:border-gh-dark-border-default flex-wrap">
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-gh-canvas-default dark:bg-gh-dark-canvas-subtle border-b border-gh-border-default dark:border-gh-dark-border-default flex-wrap">
         {/* Search */}
         <div className="relative">
           <svg className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gh-fg-muted dark:text-gh-dark-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -30,8 +30,8 @@ export function KanbanColumn({ status, label, tasks }: KanbanColumnProps) {
   const colors = STATUS_COLORS[status];
 
   return (
-    <div className="flex flex-col bg-gh-canvas-subtle dark:bg-gh-dark-canvas-subtle rounded-md min-w-[280px] w-72 shrink-0 border border-gh-border-default dark:border-gh-dark-border-default">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gh-border-default dark:border-gh-dark-border-default">
+    <div className="flex flex-col bg-gh-canvas-subtle dark:bg-gh-dark-canvas-subtle rounded-md min-w-[290px] w-[290px] shrink-0 border border-gh-border-default dark:border-gh-dark-border-default">
+      <div className="flex items-center justify-between px-3 py-2.5 border-b border-gh-border-default dark:border-gh-dark-border-default">
         <div className="flex items-center gap-2">
           <span className={`w-2.5 h-2.5 rounded-full ${colors.dot}`} />
           <h3 className="text-xs font-semibold text-gh-fg-default dark:text-gh-dark-fg-default uppercase tracking-wide">

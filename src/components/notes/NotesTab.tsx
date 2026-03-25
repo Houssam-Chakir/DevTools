@@ -31,7 +31,7 @@ export function NotesTab() {
 
   return (
     <div className="h-full flex">
-      <div className="w-56 shrink-0 bg-gh-canvas-default dark:bg-gh-dark-canvas-subtle flex flex-col overflow-hidden">
+      <div className="w-64 shrink-0 bg-gh-canvas-default dark:bg-gh-dark-canvas-subtle flex flex-col overflow-hidden">
         <NotesList
           activeNoteId={activeNoteId}
           onSelect={(note: Note) => setActiveNoteId(note.id)}
