@@ -57,7 +57,7 @@ export function TabNav({ activeTab, setActiveTab }: TabNavProps) {
           onClick={() => setActiveTab(tab.id)}
           className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
             activeTab === tab.id
-              ? 'border-[#fd8c73] text-gh-fg-default dark:text-gh-dark-fg-default'
+              ? 'border-gh-tab-active text-gh-fg-default dark:text-gh-dark-fg-default'
               : 'border-transparent text-gh-fg-muted dark:text-gh-dark-fg-muted hover:text-gh-fg-default dark:hover:text-gh-dark-fg-default'
           }`}
         >

@@ -63,7 +63,11 @@ export default {
           'dark-danger-fg': '#f85149',
           'dark-danger-emphasis': '#da3633',
           'dark-danger-subtle': '#3d0912',
-          // Neutral (purple for "in-progress")
+          // Header (dark nav)
+          'header-bg': '#24292f',
+          'header-border': '#444c56',
+          // Tab active indicator
+          'tab-active': '#fd8c73',
           'done-fg': '#8250df',
           'done-subtle': '#fbefff',
           'dark-done-fg': '#a371f7',

@@ -14,7 +14,7 @@ export function AppShell() {
 
   return (
     <div className="h-screen flex flex-col bg-gh-canvas-subtle dark:bg-gh-dark-canvas-default text-gh-fg-default dark:text-gh-dark-fg-default">
-      <header className="flex items-center justify-between px-4 py-2 bg-[#24292f] dark:bg-gh-dark-canvas-subtle border-b border-[#444c56] shrink-0">
+      <header className="flex items-center justify-between px-4 py-2 bg-gh-header-bg border-b border-gh-header-border shrink-0">
         <div className="flex items-center gap-3">
           {/* GitHub-style Octocat-like logo */}
           <svg className="w-8 h-8 text-white" viewBox="0 0 32 32" fill="currentColor">
