@@ -1,75 +1,160 @@
-import { useRef, useState, useCallback } from 'react';
+import { useCallback } from 'react';
+import {
+  ReactFlow,
+  ReactFlowProvider,
+  Background,
+  BackgroundVariant,
+  Controls,
+  addEdge,
+  applyEdgeChanges,
+  applyNodeChanges,
+  useNodesState,
+  useEdgesState,
+  useReactFlow,
+  MarkerType,
+} from '@xyflow/react';
+import type {
+  Node,
+  Edge,
+  NodeChange,
+  EdgeChange,
+  Connection,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import { nanoid } from 'nanoid';
 import { useSpaceStore } from '../../store/spaceStore';
-import { SpaceCard } from './SpaceCard';
-import { ConnectionLine } from './ConnectionLine';
+import type { SpaceCard, SpaceConnection } from '../../types';
+import { SpaceCardNode } from './SpaceCardNode';
+import { SpaceEdge } from './SpaceEdge';
 
 const GRID_SIZE = 20;
-const snapToGrid = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
+const snapToGrid = (v: number) => Math.round(v / GRID_SIZE) * GRID_SIZE;
 
-export function SpaceTab() {
-  const { cards, connections, addCard, addConnection } = useSpaceStore();
-  const svgRef = useRef<SVGSVGElement>(null);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [scale, setScale] = useState(1);
-  const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
-  const panStart = useRef<{ mouseX: number; mouseY: number; panX: number; panY: number } | null>(null);
+const nodeTypes = { spaceCard: SpaceCardNode };
+const edgeTypes = { spaceEdge: SpaceEdge };
 
-  const handleSvgMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (e.target !== svgRef.current && (e.target as Element).tagName !== 'rect') return;
-    panStart.current = { mouseX: e.clientX, mouseY: e.clientY, panX: pan.x, panY: pan.y };
-    const handleMove = (me: MouseEvent) => {
-      if (!panStart.current) return;
-      setPan({
-        x: panStart.current.panX + me.clientX - panStart.current.mouseX,
-        y: panStart.current.panY + me.clientY - panStart.current.mouseY,
+const edgeStyle = {
+  stroke: '#6366f1',
+  strokeDasharray: '6 3',
+};
+const edgeMarkerEnd = { type: MarkerType.ArrowClosed, color: '#6366f1' };
+
+function cardToNode(card: SpaceCard): Node {
+  return {
+    id: card.id,
+    type: 'spaceCard',
+    position: { x: card.x, y: card.y },
+    data: { content: card.content, projectId: card.projectId },
+    style: { width: card.width, height: card.height },
+  };
+}
+
+function connectionToEdge(conn: SpaceConnection): Edge {
+  return {
+    id: conn.id,
+    source: conn.fromCardId,
+    target: conn.toCardId,
+    type: 'spaceEdge',
+    style: edgeStyle,
+    markerEnd: edgeMarkerEnd,
+  };
+}
+
+function SpaceFlow() {
+  const { cards, connections, addCard, updateCard, deleteCard, addConnection, deleteConnection } =
+    useSpaceStore();
+  const { screenToFlowPosition } = useReactFlow();
+
+  // Nodes and edges are initialized from the persisted store on mount.
+  // All subsequent mutations (add, move, resize, delete, connect) are
+  // handled through React Flow callbacks that keep both RF state and the
+  // Zustand store in sync, so no further store→RF sync is needed.
+  const [nodes, setNodes] = useNodesState(cards.map(cardToNode));
+  const [edges, setEdges] = useEdgesState(connections.map(connectionToEdge));
+
+  const handleNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      setNodes((nds) => applyNodeChanges(changes, nds));
+      changes.forEach((change) => {
+        if (change.type === 'position' && !change.dragging && change.position) {
+          updateCard(change.id, {
+            x: snapToGrid(change.position.x),
+            y: snapToGrid(change.position.y),
+          });
+        }
+        if (change.type === 'remove') {
+          deleteCard(change.id);
+        }
       });
-    };
-    const handleUp = () => {
-      panStart.current = null;
-      window.removeEventListener('mousemove', handleMove);
-      window.removeEventListener('mouseup', handleUp);
-    };
-    window.addEventListener('mousemove', handleMove);
-    window.addEventListener('mouseup', handleUp);
-  };
+    },
+    [setNodes, updateCard, deleteCard]
+  );
 
-  const handleWheel = (e: React.WheelEvent) => {
-    if (!e.ctrlKey && !e.metaKey) return;
-    e.preventDefault();
-    setScale((s) => Math.min(3, Math.max(0.2, s - e.deltaY * 0.001)));
-  };
+  const handleEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      setEdges((eds) => applyEdgeChanges(changes, eds));
+      changes.forEach((change) => {
+        if (change.type === 'remove') {
+          deleteConnection(change.id);
+        }
+      });
+    },
+    [setEdges, deleteConnection]
+  );
 
-  const handleDblClick = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (e.target !== svgRef.current && (e.target as Element).tagName !== 'rect') return;
-    const rect = svgRef.current!.getBoundingClientRect();
-    const x = (e.clientX - rect.left - pan.x) / scale;
-    const y = (e.clientY - rect.top - pan.y) / scale;
-    addCard({ content: '', x: snapToGrid(x), y: snapToGrid(y), width: 200, height: 160 });
-  };
+  const handleConnect = useCallback(
+    (connection: Connection) => {
+      const id = nanoid();
+      addConnection(connection.source, connection.target);
+      setEdges((eds) =>
+        addEdge(
+          { ...connection, id, type: 'spaceEdge', style: edgeStyle, markerEnd: edgeMarkerEnd },
+          eds
+        )
+      );
+    },
+    [addConnection, setEdges]
+  );
 
-  const handleStartConnection = useCallback((cardId: string) => {
-    if (!connectingFrom) {
-      setConnectingFrom(cardId);
-    } else if (connectingFrom !== cardId) {
-      addConnection(connectingFrom, cardId);
-      setConnectingFrom(null);
-    } else {
-      setConnectingFrom(null);
-    }
-  }, [connectingFrom, addConnection]);
+  const createCard = useCallback(
+    (x: number, y: number) => {
+      const id = nanoid();
+      const newCard: SpaceCard = {
+        id,
+        content: '',
+        x: snapToGrid(x),
+        y: snapToGrid(y),
+        width: 200,
+        height: 160,
+        createdAt: new Date().toISOString(),
+      };
+      addCard(newCard);
+      setNodes((nds) => [...nds, cardToNode(newCard)]);
+    },
+    [addCard, setNodes]
+  );
 
-  const handleAddCard = () => {
-    addCard({
-      content: '',
-      x: snapToGrid((300 - pan.x) / scale),
-      y: snapToGrid((200 - pan.y) / scale),
-      width: 200,
-      height: 160,
-    });
-  };
+  const handleAddCard = useCallback(() => createCard(80, 80), [createCard]);
+
+  const handleContainerDoubleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const target = e.target as Element;
+      if (
+        target.closest('.react-flow__node') ||
+        target.closest('.react-flow__edge') ||
+        target.closest('.react-flow__controls')
+      )
+        return;
+      const pos = screenToFlowPosition({ x: e.clientX, y: e.clientY });
+      createCard(pos.x, pos.y);
+    },
+    [screenToFlowPosition, createCard]
+  );
+
+  const colorMode = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
 
   return (
-    <div className="relative h-full overflow-hidden bg-gray-50 dark:bg-gray-950">
+    <div className="relative h-full" onDoubleClick={handleContainerDoubleClick}>
       {/* Toolbar */}
       <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
         <button
@@ -78,57 +163,40 @@ export function SpaceTab() {
         >
           + Add Card
         </button>
-        <div className="px-3 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm border border-gray-200 dark:border-gray-700 shadow-sm">
-          {Math.round(scale * 100)}%
-        </div>
         <div className="px-3 py-2 bg-white dark:bg-gray-800 rounded-lg text-xs border border-gray-200 dark:border-gray-700 shadow-sm text-gray-600 dark:text-gray-300">
-          Zoom: Ctrl/⌘ + Wheel
+          Drag handle to connect · Double-click to add
         </div>
-        <button
-          onClick={() => { setPan({ x: 0, y: 0 }); setScale(1); }}
-          className="px-3 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm"
-        >
-          Reset View
-        </button>
-        {connectingFrom && (
-          <div className="px-3 py-2 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded-lg text-sm border border-indigo-300 dark:border-indigo-600">
-            Click another card to connect · <button onClick={() => setConnectingFrom(null)} className="underline">Cancel</button>
-          </div>
-        )}
       </div>
-      <svg
-        ref={svgRef}
-        className="w-full h-full cursor-grab active:cursor-grabbing"
-        onMouseDown={handleSvgMouseDown}
-        onWheel={handleWheel}
-        onDoubleClick={handleDblClick}
+
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={handleNodesChange}
+        onEdgesChange={handleEdgesChange}
+        onConnect={handleConnect}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        snapToGrid
+        snapGrid={[GRID_SIZE, GRID_SIZE]}
+        deleteKeyCode={['Backspace', 'Delete']}
+        colorMode={colorMode}
+        fitView={false}
+        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+        minZoom={0.2}
+        maxZoom={3}
       >
-        <defs>
-          <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1" />
-          </marker>
-          <pattern id="dots" width={GRID_SIZE} height={GRID_SIZE} patternUnits="userSpaceOnUse" patternTransform={`translate(${pan.x % GRID_SIZE} ${pan.y % GRID_SIZE})`}>
-            <circle cx="1" cy="1" r="1" className="fill-gray-300 dark:fill-gray-700" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#dots)" />
-        <g transform={`translate(${pan.x} ${pan.y}) scale(${scale})`}>
-          <g>
-            {connections.map((conn) => (
-              <ConnectionLine key={conn.id} connection={conn} cards={cards} />
-            ))}
-            {cards.map((card) => (
-              <SpaceCard
-                key={card.id}
-                card={card}
-                scale={scale}
-                onStartConnection={handleStartConnection}
-                connectingFrom={connectingFrom}
-              />
-            ))}
-          </g>
-        </g>
-      </svg>
+        <Background variant={BackgroundVariant.Dots} gap={GRID_SIZE} size={1} />
+        <Controls />
+      </ReactFlow>
     </div>
   );
 }
+
+export function SpaceTab() {
+  return (
+    <ReactFlowProvider>
+      <SpaceFlow />
+    </ReactFlowProvider>
+  );
+}
+

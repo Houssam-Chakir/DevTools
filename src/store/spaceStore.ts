@@ -6,7 +6,7 @@ import type { SpaceCard, SpaceConnection, ID } from '../types';
 interface SpaceState {
   cards: SpaceCard[];
   connections: SpaceConnection[];
-  addCard: (card: Omit<SpaceCard, 'id' | 'createdAt'>) => void;
+  addCard: (card: Omit<SpaceCard, 'createdAt'>) => void;
   updateCard: (id: ID, updates: Partial<Omit<SpaceCard, 'id' | 'createdAt'>>) => void;
   deleteCard: (id: ID) => void;
   addConnection: (fromCardId: ID, toCardId: ID) => void;
@@ -23,7 +23,7 @@ export const useSpaceStore = create<SpaceState>()(
         set((state) => ({
           cards: [
             ...state.cards,
-            { ...card, id: nanoid(), createdAt: new Date().toISOString() },
+            { ...card, createdAt: new Date().toISOString() },
           ],
         })),
       updateCard: (id, updates) =>
