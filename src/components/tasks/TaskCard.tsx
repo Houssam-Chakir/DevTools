@@ -19,6 +19,12 @@ export function TaskCard({ task, dragHandleProps }: TaskCardProps) {
 
   const project = projects.find((p) => p.id === task.projectId);
   const taskTags = tags.filter((t) => task.tagIds.includes(t.id));
+  const urgency = task.urgency ?? 'medium';
+  const urgencyClass = {
+    low: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+    high: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+  }[urgency];
 
   return (
     <>
@@ -50,6 +56,11 @@ export function TaskCard({ task, dragHandleProps }: TaskCardProps) {
             {taskTags.map((t) => <TagPill key={t.id} tag={t} />)}
           </div>
         )}
+        <div className="mt-2">
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${urgencyClass}`}>
+            {urgency.charAt(0).toUpperCase() + urgency.slice(1)}
+          </span>
+        </div>
       </div>
       {showEdit && <TaskModal task={task} onClose={() => setShowEdit(false)} />}
     </>

@@ -14,12 +14,14 @@ export interface Tag {
 }
 
 export type TaskStatus = 'todo' | 'in-progress' | 'done';
+export type TaskUrgency = 'low' | 'medium' | 'high';
 
 export interface Task {
   id: ID;
   title: string;
   description?: string;
   status: TaskStatus;
+  urgency?: TaskUrgency;
   projectId?: ID;
   tagIds: ID[];
   createdAt: string;
