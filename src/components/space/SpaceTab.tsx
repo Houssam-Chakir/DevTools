@@ -3,6 +3,9 @@ import { useSpaceStore } from '../../store/spaceStore';
 import { SpaceCard } from './SpaceCard';
 import { ConnectionLine } from './ConnectionLine';
 
+const GRID_SIZE = 20;
+const snapToGrid = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
+
 export function SpaceTab() {
   const { cards, connections, addCard, addConnection } = useSpaceStore();
   const svgRef = useRef<SVGSVGElement>(null);
@@ -10,7 +13,6 @@ export function SpaceTab() {
   const [scale, setScale] = useState(1);
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
   const panStart = useRef<{ mouseX: number; mouseY: number; panX: number; panY: number } | null>(null);
-  const GRID_SIZE = 20;
 
   const handleSvgMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
     if (e.target !== svgRef.current && (e.target as Element).tagName !== 'rect') return;
@@ -42,8 +44,7 @@ export function SpaceTab() {
     const rect = svgRef.current!.getBoundingClientRect();
     const x = (e.clientX - rect.left - pan.x) / scale;
     const y = (e.clientY - rect.top - pan.y) / scale;
-    const snap = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
-    addCard({ content: '', x: snap(x), y: snap(y), width: 200, height: 160 });
+    addCard({ content: '', x: snapToGrid(x), y: snapToGrid(y), width: 200, height: 160 });
   };
 
   const handleStartConnection = useCallback((cardId: string) => {
@@ -58,11 +59,10 @@ export function SpaceTab() {
   }, [connectingFrom, addConnection]);
 
   const handleAddCard = () => {
-    const snap = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
     addCard({
       content: '',
-      x: snap((300 - pan.x) / scale),
-      y: snap((200 - pan.y) / scale),
+      x: snapToGrid((300 - pan.x) / scale),
+      y: snapToGrid((200 - pan.y) / scale),
       width: 200,
       height: 160,
     });
