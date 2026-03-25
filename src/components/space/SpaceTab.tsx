@@ -10,6 +10,7 @@ export function SpaceTab() {
   const [scale, setScale] = useState(1);
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
   const panStart = useRef<{ mouseX: number; mouseY: number; panX: number; panY: number } | null>(null);
+  const GRID_SIZE = 20;
 
   const handleSvgMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
     if (e.target !== svgRef.current && (e.target as Element).tagName !== 'rect') return;
@@ -31,6 +32,7 @@ export function SpaceTab() {
   };
 
   const handleWheel = (e: React.WheelEvent) => {
+    if (!e.ctrlKey && !e.metaKey) return;
     e.preventDefault();
     setScale((s) => Math.min(3, Math.max(0.2, s - e.deltaY * 0.001)));
   };
@@ -40,7 +42,8 @@ export function SpaceTab() {
     const rect = svgRef.current!.getBoundingClientRect();
     const x = (e.clientX - rect.left - pan.x) / scale;
     const y = (e.clientY - rect.top - pan.y) / scale;
-    addCard({ content: '', x, y, width: 200, height: 150 });
+    const snap = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
+    addCard({ content: '', x: snap(x), y: snap(y), width: 200, height: 160 });
   };
 
   const handleStartConnection = useCallback((cardId: string) => {
@@ -55,7 +58,14 @@ export function SpaceTab() {
   }, [connectingFrom, addConnection]);
 
   const handleAddCard = () => {
-    addCard({ content: '', x: (300 - pan.x) / scale, y: (200 - pan.y) / scale, width: 200, height: 150 });
+    const snap = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
+    addCard({
+      content: '',
+      x: snap((300 - pan.x) / scale),
+      y: snap((200 - pan.y) / scale),
+      width: 200,
+      height: 160,
+    });
   };
 
   return (
@@ -70,6 +80,9 @@ export function SpaceTab() {
         </button>
         <div className="px-3 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm border border-gray-200 dark:border-gray-700 shadow-sm">
           {Math.round(scale * 100)}%
+        </div>
+        <div className="px-3 py-2 bg-white dark:bg-gray-800 rounded-lg text-xs border border-gray-200 dark:border-gray-700 shadow-sm text-gray-600 dark:text-gray-300">
+          Zoom: Ctrl/⌘ + Wheel
         </div>
         <button
           onClick={() => { setPan({ x: 0, y: 0 }); setScale(1); }}
@@ -94,13 +107,13 @@ export function SpaceTab() {
           <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
             <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1" />
           </marker>
-          <pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform={`translate(${pan.x % 20} ${pan.y % 20})`}>
-            <circle cx="1" cy="1" r="1" fill="#d1d5db" />
+          <pattern id="dots" width={GRID_SIZE} height={GRID_SIZE} patternUnits="userSpaceOnUse" patternTransform={`translate(${pan.x % GRID_SIZE} ${pan.y % GRID_SIZE})`}>
+            <circle cx="1" cy="1" r="1" className="fill-gray-300 dark:fill-gray-700" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#dots)" />
         <g transform={`translate(${pan.x} ${pan.y}) scale(${scale})`}>
-          <svg overflow="visible">
+          <g>
             {connections.map((conn) => (
               <ConnectionLine key={conn.id} connection={conn} cards={cards} />
             ))}
@@ -113,7 +126,7 @@ export function SpaceTab() {
                 connectingFrom={connectingFrom}
               />
             ))}
-          </svg>
+          </g>
         </g>
       </svg>
     </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Task, TaskStatus } from '../../types';
+import type { Task, TaskStatus, TaskUrgency } from '../../types';
 import { useTaskStore } from '../../store/taskStore';
 import { useProjectStore } from '../../store/projectStore';
 import { Modal } from '../shared/Modal';
@@ -17,6 +17,7 @@ export function TaskModal({ task, defaultStatus = 'todo', onClose }: TaskModalPr
   const [title, setTitle] = useState(task?.title ?? '');
   const [description, setDescription] = useState(task?.description ?? '');
   const [status, setStatus] = useState<TaskStatus>(task?.status ?? defaultStatus);
+  const [urgency, setUrgency] = useState<TaskUrgency>(task?.urgency ?? 'medium');
   const [projectId, setProjectId] = useState(task?.projectId ?? '');
   const [tagIds, setTagIds] = useState<string[]>(task?.tagIds ?? []);
 
@@ -27,6 +28,7 @@ export function TaskModal({ task, defaultStatus = 'todo', onClose }: TaskModalPr
         title: title.trim(),
         description: description.trim() || undefined,
         status,
+        urgency,
         projectId: projectId || undefined,
         tagIds,
       });
@@ -35,6 +37,7 @@ export function TaskModal({ task, defaultStatus = 'todo', onClose }: TaskModalPr
         title: title.trim(),
         description: description.trim() || undefined,
         status,
+        urgency,
         projectId: projectId || undefined,
         tagIds,
       });
@@ -74,28 +77,80 @@ export function TaskModal({ task, defaultStatus = 'todo', onClose }: TaskModalPr
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Status</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as TaskStatus)}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
-          >
-            <option value="todo">To Do</option>
-            <option value="in-progress">In Progress</option>
-            <option value="done">Done</option>
-          </select>
+          <div className="flex flex-wrap gap-2">
+            {([
+              { value: 'todo', label: 'To Do' },
+              { value: 'in-progress', label: 'In Progress' },
+              { value: 'done', label: 'Done' },
+            ] as { value: TaskStatus; label: string }[]).map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setStatus(option.value)}
+                className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                  status === option.value
+                    ? 'bg-indigo-500 text-white border-indigo-500'
+                    : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Urgency</label>
+          <div className="flex flex-wrap gap-2">
+            {([
+              { value: 'low', label: 'Low', activeClass: 'bg-emerald-500 border-emerald-500' },
+              { value: 'medium', label: 'Medium', activeClass: 'bg-amber-500 border-amber-500' },
+              { value: 'high', label: 'High', activeClass: 'bg-rose-500 border-rose-500' },
+            ] as { value: TaskUrgency; label: string; activeClass: string }[]).map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setUrgency(option.value)}
+                className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                  urgency === option.value
+                    ? `${option.activeClass} text-white`
+                    : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Project</label>
-          <select
-            value={projectId}
-            onChange={(e) => setProjectId(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm"
-          >
-            <option value="">No project</option>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setProjectId('')}
+              className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                !projectId
+                  ? 'bg-indigo-500 text-white border-indigo-500'
+                  : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              No project
+            </button>
             {projects.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setProjectId(p.id)}
+                className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${
+                  projectId === p.id
+                    ? 'text-white border-transparent'
+                    : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+                style={projectId === p.id ? { backgroundColor: p.color } : undefined}
+              >
+                {p.name}
+              </button>
             ))}
-          </select>
+          </div>
         </div>
         {tags.length > 0 && (
           <div>

@@ -11,6 +11,9 @@ interface SpaceCardProps {
   connectingFrom: string | null;
 }
 
+const GRID_SIZE = 20;
+const snapToGrid = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
+
 export function SpaceCard({ card, scale, onStartConnection, connectingFrom }: SpaceCardProps) {
   const { updateCard, deleteCard } = useSpaceStore();
   const { projects } = useProjectStore();
@@ -29,7 +32,10 @@ export function SpaceCard({ card, scale, onStartConnection, connectingFrom }: Sp
       if (!dragStart.current) return;
       const dx = (me.clientX - dragStart.current.mouseX) / scale;
       const dy = (me.clientY - dragStart.current.mouseY) / scale;
-      updateCard(card.id, { x: dragStart.current.cardX + dx, y: dragStart.current.cardY + dy });
+      updateCard(card.id, {
+        x: snapToGrid(dragStart.current.cardX + dx),
+        y: snapToGrid(dragStart.current.cardY + dy),
+      });
     };
     const handleUp = () => {
       dragStart.current = null;
@@ -48,8 +54,8 @@ export function SpaceCard({ card, scale, onStartConnection, connectingFrom }: Sp
       const dx = (me.clientX - resizeStart.current.mouseX) / scale;
       const dy = (me.clientY - resizeStart.current.mouseY) / scale;
       updateCard(card.id, {
-        width: Math.max(120, resizeStart.current.w + dx),
-        height: Math.max(80, resizeStart.current.h + dy),
+        width: Math.max(120, snapToGrid(resizeStart.current.w + dx)),
+        height: Math.max(80, snapToGrid(resizeStart.current.h + dy)),
       });
     };
     const handleUp = () => {
