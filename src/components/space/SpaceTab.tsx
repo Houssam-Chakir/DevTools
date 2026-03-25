@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -23,6 +23,7 @@ import type {
 import '@xyflow/react/dist/style.css';
 import { nanoid } from 'nanoid';
 import { useSpaceStore } from '../../store/spaceStore';
+import { useProjectStore } from '../../store/projectStore';
 import type { SpaceCard, SpaceConnection } from '../../types';
 import { SpaceCardNode } from './SpaceCardNode';
 import { SpaceEdge } from './SpaceEdge';
@@ -34,10 +35,10 @@ const nodeTypes = { spaceCard: SpaceCardNode };
 const edgeTypes = { spaceEdge: SpaceEdge };
 
 const edgeStyle = {
-  stroke: '#6366f1',
+  stroke: '#0969da',
   strokeDasharray: '6 3',
 };
-const edgeMarkerEnd = { type: MarkerType.ArrowClosed, color: '#6366f1' };
+const edgeMarkerEnd = { type: MarkerType.ArrowClosed, color: '#0969da' };
 
 function cardToNode(card: SpaceCard): Node {
   return {
@@ -60,17 +61,39 @@ function connectionToEdge(conn: SpaceConnection): Edge {
   };
 }
 
-function SpaceFlow() {
+interface SpaceFlowProps {
+  selectedProjectId: string;
+}
+
+function SpaceFlow({ selectedProjectId }: SpaceFlowProps) {
   const { cards, connections, addCard, updateCard, deleteCard, addConnection, deleteConnection } =
     useSpaceStore();
   const { screenToFlowPosition } = useReactFlow();
 
-  // Nodes and edges are initialized from the persisted store on mount.
-  // All subsequent mutations (add, move, resize, delete, connect) are
-  // handled through React Flow callbacks that keep both RF state and the
-  // Zustand store in sync, so no further store→RF sync is needed.
-  const [nodes, setNodes] = useNodesState(cards.map(cardToNode));
-  const [edges, setEdges] = useEdgesState(connections.map(connectionToEdge));
+  // Filter cards by selected project (empty = all)
+  const filteredCards = useMemo(
+    () =>
+      selectedProjectId
+        ? cards.filter((c) => c.projectId === selectedProjectId)
+        : cards,
+    [cards, selectedProjectId]
+  );
+
+  const filteredCardIds = useMemo(
+    () => new Set(filteredCards.map((c) => c.id)),
+    [filteredCards]
+  );
+
+  const filteredConnections = useMemo(
+    () =>
+      connections.filter(
+        (conn) => filteredCardIds.has(conn.fromCardId) && filteredCardIds.has(conn.toCardId)
+      ),
+    [connections, filteredCardIds]
+  );
+
+  const [nodes, setNodes] = useNodesState(filteredCards.map(cardToNode));
+  const [edges, setEdges] = useEdgesState(filteredConnections.map(connectionToEdge));
 
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -126,12 +149,13 @@ function SpaceFlow() {
         y: snapToGrid(y),
         width: 200,
         height: 160,
+        projectId: selectedProjectId || undefined,
         createdAt: new Date().toISOString(),
       };
       addCard(newCard);
       setNodes((nds) => [...nds, cardToNode(newCard)]);
     },
-    [addCard, setNodes]
+    [addCard, setNodes, selectedProjectId]
   );
 
   const handleAddCard = useCallback(() => createCard(80, 80), [createCard]);
@@ -156,14 +180,17 @@ function SpaceFlow() {
   return (
     <div className="relative h-full" onDoubleClick={handleContainerDoubleClick}>
       {/* Toolbar */}
-      <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+      <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
         <button
           onClick={handleAddCard}
-          className="px-3 py-2 bg-indigo-500 text-white rounded-lg text-sm hover:bg-indigo-600 shadow-sm"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-gh-success-emphasis dark:bg-gh-dark-success-emphasis text-white rounded-md text-sm hover:opacity-90 shadow-sm font-medium"
         >
-          + Add Card
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add card
         </button>
-        <div className="px-3 py-2 bg-white dark:bg-gray-800 rounded-lg text-xs border border-gray-200 dark:border-gray-700 shadow-sm text-gray-600 dark:text-gray-300">
+        <div className="px-3 py-1.5 bg-gh-canvas-default dark:bg-gh-dark-canvas-subtle rounded-md text-xs border border-gh-border-default dark:border-gh-dark-border-default shadow-sm text-gh-fg-muted dark:text-gh-dark-fg-muted">
           Drag handle to connect · Double-click to add
         </div>
       </div>
@@ -193,10 +220,67 @@ function SpaceFlow() {
 }
 
 export function SpaceTab() {
+  const { projects } = useProjectStore();
+  const [selectedProjectId, setSelectedProjectId] = useState('');
+
+  const selectedProject = projects.find((p) => p.id === selectedProjectId);
+
   return (
-    <ReactFlowProvider>
-      <SpaceFlow />
-    </ReactFlowProvider>
+    <div className="h-full flex flex-col">
+      {/* Project selector bar */}
+      <div className="flex items-center gap-3 px-4 py-2 bg-gh-canvas-default dark:bg-gh-dark-canvas-subtle border-b border-gh-border-default dark:border-gh-dark-border-default shrink-0">
+        <svg className="w-4 h-4 text-gh-fg-muted dark:text-gh-dark-fg-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7a2 2 0 012-2h14a2 2 0 012 2M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l9 6 9-6" />
+        </svg>
+        <span className="text-sm font-medium text-gh-fg-default dark:text-gh-dark-fg-default">Project space:</span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            onClick={() => setSelectedProjectId('')}
+            className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+              !selectedProjectId
+                ? 'bg-gh-accent-emphasis text-white border-gh-accent-emphasis'
+                : 'bg-gh-canvas-subtle dark:bg-gh-dark-canvas-default border-gh-border-default dark:border-gh-dark-border-default text-gh-fg-muted dark:text-gh-dark-fg-muted hover:text-gh-fg-default dark:hover:text-gh-dark-fg-default'
+            }`}
+          >
+            All projects
+          </button>
+          {projects.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => setSelectedProjectId(p.id)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                selectedProjectId === p.id
+                  ? 'text-white border-transparent'
+                  : 'bg-gh-canvas-subtle dark:bg-gh-dark-canvas-default border-gh-border-default dark:border-gh-dark-border-default text-gh-fg-muted dark:text-gh-dark-fg-muted hover:text-gh-fg-default dark:hover:text-gh-dark-fg-default'
+              }`}
+              style={
+                selectedProjectId === p.id
+                  ? { backgroundColor: p.color, borderColor: p.color }
+                  : undefined
+              }
+            >
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: selectedProjectId === p.id ? 'rgba(255,255,255,0.7)' : p.color }}
+              />
+              {p.name}
+            </button>
+          ))}
+        </div>
+        {selectedProject && (
+          <span className="ml-auto text-xs text-gh-fg-muted dark:text-gh-dark-fg-muted">
+            Showing cards for <strong style={{ color: selectedProject.color }}>{selectedProject.name}</strong>
+          </span>
+        )}
+      </div>
+
+      {/* React Flow canvas */}
+      <div className="flex-1 overflow-hidden">
+        <ReactFlowProvider>
+          <SpaceFlow selectedProjectId={selectedProjectId} />
+        </ReactFlowProvider>
+      </div>
+    </div>
   );
 }
 

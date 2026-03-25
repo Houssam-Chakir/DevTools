@@ -47,10 +47,10 @@ export function SpaceCardNode({ id, data, selected }: NodeProps) {
 
   return (
     <div
-      className={`w-full h-full bg-white dark:bg-gray-800 rounded-xl border shadow-sm flex flex-col overflow-hidden group relative ${
+      className={`w-full h-full bg-gh-canvas-default dark:bg-gh-dark-canvas-subtle rounded-md border shadow-sm flex flex-col overflow-hidden group relative ${
         selected
-          ? 'border-indigo-500 ring-2 ring-indigo-400'
-          : 'border-gray-200 dark:border-gray-700'
+          ? 'border-gh-accent-fg dark:border-gh-dark-accent-fg ring-2 ring-gh-accent-fg/30 dark:ring-gh-dark-accent-fg/30'
+          : 'border-gh-border-default dark:border-gh-dark-border-default hover:border-gh-accent-fg/50 dark:hover:border-gh-dark-accent-fg/50'
       }`}
     >
       <NodeResizer
@@ -63,24 +63,26 @@ export function SpaceCardNode({ id, data, selected }: NodeProps) {
       <Handle
         type="target"
         position={Position.Left}
-        className="!w-2.5 !h-2.5 !border-indigo-400 !bg-white dark:!bg-gray-800"
+        className="!w-2.5 !h-2.5 !border-gh-accent-fg !bg-gh-canvas-default dark:!bg-gh-dark-canvas-subtle"
       />
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-2.5 !h-2.5 !border-indigo-400 !bg-white dark:!bg-gray-800"
+        className="!w-2.5 !h-2.5 !border-gh-accent-fg !bg-gh-canvas-default dark:!bg-gh-dark-canvas-subtle"
       />
 
       {/* Header */}
-      <div className="nodrag flex items-center justify-between px-2 py-1 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 shrink-0">
+      <div className="nodrag flex items-center justify-between px-2 py-1 border-b border-gh-border-default dark:border-gh-dark-border-default bg-gh-canvas-subtle dark:bg-gh-dark-canvas-inset shrink-0">
         {project && <ProjectPill project={project} />}
         <div className="flex gap-1 ml-auto opacity-0 group-hover:opacity-100">
           <button
             onClick={handleDelete}
-            className="w-5 h-5 flex items-center justify-center rounded text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+            className="w-5 h-5 flex items-center justify-center rounded text-gh-danger-fg dark:text-gh-dark-danger-fg hover:bg-gh-danger-subtle dark:hover:bg-gh-dark-danger-subtle"
             title="Delete"
           >
-            ✕
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
       </div>
@@ -102,11 +104,13 @@ export function SpaceCardNode({ id, data, selected }: NodeProps) {
                 setIsEditing(false);
               }
             }}
-            className="w-full h-full resize-none text-xs bg-transparent outline-none"
+            className="w-full h-full resize-none text-xs bg-transparent outline-none text-gh-fg-default dark:text-gh-dark-fg-default"
           />
         ) : (
-          <p className="text-xs whitespace-pre-wrap break-words">
-            {(data as SpaceCardData).content || 'Double-click to edit'}
+          <p className="text-xs whitespace-pre-wrap break-words text-gh-fg-default dark:text-gh-dark-fg-default">
+            {(data as SpaceCardData).content || (
+              <span className="text-gh-fg-muted dark:text-gh-dark-fg-muted italic">Double-click to edit</span>
+            )}
           </p>
         )}
       </div>

@@ -24,6 +24,7 @@ export interface Task {
   urgency?: TaskUrgency;
   projectId?: ID;
   tagIds: ID[];
+  parentTaskId?: ID;
   createdAt: string;
   updatedAt: string;
 }

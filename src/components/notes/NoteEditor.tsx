@@ -49,55 +49,65 @@ export function NoteEditor({ note, onDelete }: NoteEditorProps) {
   if (!editor) return null;
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-gh-canvas-default dark:bg-gh-dark-canvas-subtle">
+      {/* Title bar */}
+      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gh-border-default dark:border-gh-dark-border-default">
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onBlur={handleTitleBlur}
-          className="flex-1 text-lg font-semibold bg-transparent outline-none"
+          className="flex-1 text-base font-semibold bg-transparent outline-none text-gh-fg-default dark:text-gh-dark-fg-default placeholder-gh-fg-muted dark:placeholder-gh-dark-fg-muted"
           placeholder="Note title..."
         />
         <select
           value={note.projectId ?? ''}
           onChange={handleProjectChange}
-          className="px-2 py-1 text-xs rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+          className="px-2 py-1 text-xs rounded-md border border-gh-border-default dark:border-gh-dark-border-default bg-gh-canvas-subtle dark:bg-gh-dark-canvas-default text-gh-fg-default dark:text-gh-dark-fg-default focus:outline-none"
         >
           <option value="">No project</option>
           {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <button
           onClick={onDelete}
-          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm"
+          className="p-1.5 rounded-md text-gh-danger-fg dark:text-gh-dark-danger-fg hover:bg-gh-danger-subtle dark:hover:bg-gh-dark-danger-subtle"
           title="Delete note"
         >
-          🗑
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
         </button>
       </div>
       {/* Formatting toolbar */}
-      <div className="flex items-center gap-1 px-6 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 flex-wrap">
+      <div className="flex items-center gap-1 px-4 py-1.5 bg-gh-canvas-subtle dark:bg-gh-dark-canvas-inset border-b border-gh-border-default dark:border-gh-dark-border-default flex-wrap">
         <ToolbarBtn onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive('heading', { level: 1 })} label="H1" />
         <ToolbarBtn onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })} label="H2" />
+        <div className="w-px h-4 bg-gh-border-default dark:bg-gh-dark-border-default mx-0.5" />
         <ToolbarBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} label="B" bold />
         <ToolbarBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} label="I" italic />
+        <div className="w-px h-4 bg-gh-border-default dark:bg-gh-dark-border-default mx-0.5" />
         <ToolbarBtn onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')} label="• List" />
         <ToolbarBtn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive('orderedList')} label="1. List" />
-        <div className="flex flex-wrap gap-1 ml-4">
-          {tags.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => toggleTag(t.id)}
-              className={`px-2 py-0.5 rounded-full text-xs border ${
-                note.tagIds.includes(t.id)
-                  ? 'bg-indigo-500 text-white border-indigo-500'
-                  : 'bg-transparent text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600'
-              }`}
-            >
-              #{t.name}
-            </button>
-          ))}
-        </div>
+        {tags.length > 0 && (
+          <>
+            <div className="w-px h-4 bg-gh-border-default dark:bg-gh-dark-border-default mx-0.5" />
+            <div className="flex flex-wrap gap-1">
+              {tags.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => toggleTag(t.id)}
+                  className={`px-1.5 py-0.5 rounded-full text-xs border transition-colors ${
+                    note.tagIds.includes(t.id)
+                      ? 'bg-gh-accent-emphasis text-white border-gh-accent-emphasis'
+                      : 'bg-transparent text-gh-fg-muted dark:text-gh-dark-fg-muted border-gh-border-default dark:border-gh-dark-border-default hover:bg-gh-canvas-subtle dark:hover:bg-gh-dark-canvas-default'
+                  }`}
+                >
+                  #{t.name}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
       <div className="flex-1 overflow-y-auto px-6 py-4">
         <EditorContent
@@ -121,10 +131,10 @@ function ToolbarBtn({ onClick, active, label, bold: isBold, italic: isItalic }: 
   return (
     <button
       onClick={onClick}
-      className={`px-2.5 py-1 rounded text-xs transition-colors ${
+      className={`px-2 py-0.5 rounded text-xs transition-colors ${
         active
-          ? 'bg-indigo-500 text-white'
-          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
+          ? 'bg-gh-accent-emphasis text-white'
+          : 'bg-gh-canvas-default dark:bg-gh-dark-canvas-subtle text-gh-fg-default dark:text-gh-dark-fg-default hover:bg-gh-canvas-subtle dark:hover:bg-gh-dark-canvas-default border border-gh-border-default dark:border-gh-dark-border-default'
       }`}
       style={{ fontWeight: isBold ? 700 : undefined, fontStyle: isItalic ? 'italic' : undefined }}
     >
