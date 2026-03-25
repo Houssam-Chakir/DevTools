@@ -31,24 +31,26 @@ export function NotesTab() {
 
   return (
     <div className="h-full flex">
-      <div className="w-64 shrink-0 bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
+      <div className="w-56 shrink-0 bg-gh-canvas-default dark:bg-gh-dark-canvas-subtle flex flex-col overflow-hidden">
         <NotesList
           activeNoteId={activeNoteId}
           onSelect={(note: Note) => setActiveNoteId(note.id)}
           onNew={handleNew}
         />
       </div>
-      <div className="flex-1 bg-white dark:bg-gray-900 overflow-hidden flex flex-col">
+      <div className="flex-1 bg-gh-canvas-default dark:bg-gh-dark-canvas-subtle overflow-hidden flex flex-col border-l border-gh-border-default dark:border-gh-dark-border-default">
         {activeNote ? (
           <NoteEditor note={activeNote} onDelete={() => handleDelete(activeNote.id)} />
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
+          <div className="flex items-center justify-center h-full text-gh-fg-muted dark:text-gh-dark-fg-muted bg-gh-canvas-default dark:bg-gh-dark-canvas-subtle">
             <div className="text-center">
-              <p className="text-4xl mb-4">📝</p>
+              <svg className="w-12 h-12 mx-auto mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
               <p className="text-sm">Select a note or create a new one</p>
               <button
                 onClick={handleNew}
-                className="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm hover:bg-indigo-600"
+                className="mt-4 px-4 py-1.5 bg-gh-success-emphasis dark:bg-gh-dark-success-emphasis text-white rounded-md text-sm hover:opacity-90 font-medium"
               >
                 Create Note
               </button>

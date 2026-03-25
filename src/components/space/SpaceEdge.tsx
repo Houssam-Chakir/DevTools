@@ -40,10 +40,12 @@ export function SpaceEdge({
         >
           <button
             onClick={handleDelete}
-            className="w-5 h-5 rounded-full bg-white dark:bg-gray-800 border border-indigo-500 text-indigo-500 text-xs flex items-center justify-center hover:bg-indigo-50 dark:hover:bg-indigo-900/20 shadow-sm"
+            className="w-5 h-5 rounded-full bg-gh-canvas-default dark:bg-gh-dark-canvas-subtle border border-gh-accent-fg dark:border-gh-dark-accent-fg text-gh-accent-fg dark:text-gh-dark-accent-fg text-xs flex items-center justify-center hover:bg-gh-accent-subtle dark:hover:bg-gh-dark-accent-subtle shadow-sm"
             title="Delete connection"
           >
-            ✕
+            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
       </EdgeLabelRenderer>

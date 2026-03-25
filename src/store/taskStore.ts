@@ -36,9 +36,22 @@ export const useTaskStore = create<TaskState>()(
           ),
         })),
       deleteTask: (id) =>
-        set((state) => ({
-          tasks: state.tasks.filter((t) => t.id !== id),
-        })),
+        set((state) => {
+          const toDelete = new Set<string>();
+          toDelete.add(id);
+          // cascade delete subtasks
+          let changed = true;
+          while (changed) {
+            changed = false;
+            state.tasks.forEach((t) => {
+              if (t.parentTaskId && toDelete.has(t.parentTaskId) && !toDelete.has(t.id)) {
+                toDelete.add(t.id);
+                changed = true;
+              }
+            });
+          }
+          return { tasks: state.tasks.filter((t) => !toDelete.has(t.id)) };
+        }),
       moveTask: (id, status) =>
         set((state) => ({
           tasks: state.tasks.map((t) =>
