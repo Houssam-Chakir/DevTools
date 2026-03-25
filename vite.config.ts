@@ -3,6 +3,18 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'editor': ['@tiptap/react', '@tiptap/starter-kit'],
+          'dnd': ['@hello-pangea/dnd'],
+          'state': ['zustand'],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
